@@ -4,10 +4,9 @@ import User from '@/database_models/user'; // Ensure this points to the correct 
 import bcrypt from "bcrypt";
 import dbConnect from "@/app/database/dbconnect";
 
-const appUrl = process.env.NEXT_PUBLIC_APP_URL; 
-
 export async function POST(req) {
   try {
+    await dbConnect(); // Ensure database is connected
     const { email } = await req.json();
 
     // Check if email is provided
@@ -37,15 +36,11 @@ export async function POST(req) {
     await user.save();
 
     // Send email
-    const resetLink = `${appUrl}/reset-password?token=${resetToken}`;
     await sendEmail({
-      to: email,
-      subject: "Password Reset Request",
-      html: `
-        <p>You requested a password reset. Click the link below to reset your password:</p>
-        <a href="${resetLink}">Reset Password</a>
-        <p>If you didn't request this, you can safely ignore this email.</p>
-      `,
+      to: user.email,
+      subject: 'Password Reset Request',
+      resetUrl: `${process.env.NEXT_PUBLIC_APP_URL}/reset-password?token=${resetToken}`,
+      name: user.name,
     });
 
     return new Response(

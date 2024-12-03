@@ -24,7 +24,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { toast } from "@/hooks/use-toast"; // Updated import
+import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/auth-context";
 
 const FormSchema = z
@@ -49,6 +49,7 @@ const FormSchema = z
 export default function RegisterPage() {
   const { setUser } = useAuth();
   const router = useRouter();
+  const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const form = useForm({
     resolver: zodResolver(FormSchema),
@@ -87,11 +88,19 @@ export default function RegisterPage() {
         router.push("/home");
       } else {
         const errorData = await response.json();
-        toast({
-          title: "Registration Failed",
-          description: errorData.message || "An error occurred during registration.",
-          variant: "destructive",
-        });
+        if (response.status === 400 && errorData.message === "User already exists") {
+          toast({
+            title: "Registration Failed",
+            description: "This email is already registered. Please try logging in.",
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Error",
+            description: errorData.message || "An error occurred.",
+            variant: "destructive",
+          });
+        }
       }
     } catch (error) {
       toast({

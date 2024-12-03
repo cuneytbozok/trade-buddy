@@ -180,9 +180,9 @@ const StocksTable = () => {
   }
 
   return (
-    <div className="flex justify-center items-center min-h-screen bg-gray-50 p-4">
-      <div className="w-full max-w-4xl bg-white shadow-md rounded-lg p-6">
-        <h1 className="text-2xl font-semibold mb-6 text-center">My Stocks</h1>
+    <div className="flex justify-center min-h-screen bg-gray-50 p-2">
+      <div className="w-full max-w-4xl bg-white shadow-md rounded-lg p-4">
+        <h1 className="text-2xl font-semibold mb-4 text-center">My Stocks</h1>
         <Table>
           <TableHeader>
             <TableRow>
@@ -234,11 +234,11 @@ const StocksTable = () => {
             ))}
           </TableBody>
         </Table>
-
-        <Button className="mt-6 w-full" onClick={handleAddRow}>
+  
+        <Button className="mt-4 w-full" onClick={handleAddRow}>
           Add New Item
         </Button>
-
+  
         {hasChanges && !hasErrors && (
           <Button
             className="mt-4 w-full bg-green-500 text-white hover:bg-green-600"
@@ -248,7 +248,7 @@ const StocksTable = () => {
             {isSaving ? "Saving..." : "Save Changes"}
           </Button>
         )}
-
+  
         {showConfirmation && (
           <Alert>
             <div className="flex flex-col">

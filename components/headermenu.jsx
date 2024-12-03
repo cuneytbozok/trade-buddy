@@ -45,6 +45,9 @@ export function HeaderMenu() {
               <a href="/portfolio" className="text-gray-600 hover:text-gray-900">
                 Portfolio
               </a>
+              <a href="/dashboard" className="text-gray-600 hover:text-gray-900">
+                Dashboard
+              </a>
               <a href="/news" className="text-gray-600 hover:text-gray-900">
                 News
               </a>

@@ -15,15 +15,16 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { toast } from "@/hooks/use-toast";
+import { useToast } from "@/hooks/use-toast"; // Updated to use useToast hook
 import { useAuth } from "@/contexts/auth-context";
 
 export function LoginForm() {
   const { setUser } = useAuth();
+  const { toast } = useToast(); // Hook usage
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const [email, setEmail] = useState(""); // React state for email
-  const [password, setPassword] = useState(""); // React state for password
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -37,22 +38,27 @@ export function LoginForm() {
       });
 
       if (response.ok) {
-        const result = await response.json();
-        const decoded = jwt.decode(result.token);
+        const { token } = await response.json();
 
-        if (!decoded || !decoded.id) {
-          throw new Error("Invalid token structure");
+        if (!token) {
+          throw new Error("No token received from the server.");
         }
 
-        localStorage.setItem("token", result.token); // Save token
-        setUser(decoded); // Immediately update user state in context
+        const decoded = jwt.decode(token);
+
+        if (!decoded || !decoded.id) {
+          throw new Error("Invalid token structure.");
+        }
+
+        localStorage.setItem("token", token);
+        setUser(decoded);
 
         toast({
           title: "Login Successful",
           description: "Welcome back!",
         });
 
-        router.push("/home"); // Redirect to home
+        router.push("/home"); // Redirect to the home page
       } else {
         const errorData = await response.json();
         toast({
@@ -99,7 +105,7 @@ export function LoginForm() {
               type="email"
               placeholder="email@example.com"
               value={email}
-              onChange={(e) => setEmail(e.target.value)} // Bind to state
+              onChange={(e) => setEmail(e.target.value)}
               autoComplete="email"
               required
             />
@@ -107,7 +113,7 @@ export function LoginForm() {
           <div className="grid gap-2">
             <div className="flex items-center">
               <Label htmlFor="password">Password</Label>
-              <Link href="#" className="ml-auto text-sm underline">
+              <Link href="/forgot-password" className="ml-auto text-sm underline">
                 Forgot your password?
               </Link>
             </div>
@@ -115,8 +121,8 @@ export function LoginForm() {
               id="password"
               type="password"
               value={password}
-              onChange={(e) => setPassword(e.target.value)} // Bind to state
-              
+              onChange={(e) => setPassword(e.target.value)}
+              autoComplete="current-password"
               required
             />
           </div>
