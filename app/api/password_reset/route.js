@@ -1,8 +1,8 @@
 import { sendEmail } from '@/lib/email';
 import crypto from 'crypto';
-import User from '@/models/user'; // Ensure this points to the correct user model
+import User from '@/database_models/user'; // Ensure this points to the correct user model
 import bcrypt from "bcrypt";
-import dbConnect from "@/utils/dbConnect";
+import dbConnect from "@/app/database/dbconnect";
 
 const appUrl = process.env.NEXT_PUBLIC_APP_URL; 
 
