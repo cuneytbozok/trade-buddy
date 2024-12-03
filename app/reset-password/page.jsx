@@ -1,57 +1,74 @@
 "use client";
 
-import React, { useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { Button } from "@/components/ui/button";
+import React, { Suspense, useState } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Form, FormField, FormItem, FormControl, FormLabel, FormMessage } from "@/components/ui/form";
 import { toast } from "@/hooks/use-toast";
 
-export default function ResetPasswordForm() {
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const router = useRouter();
+const FormSchema = z
+  .object({
+    password: z
+      .string()
+      .min(8, { message: "Password must be at least 8 characters" })
+      .regex(/[A-Z]/, { message: "Password must include an uppercase letter" })
+      .regex(/[a-z]/, { message: "Password must include a lowercase letter" })
+      .regex(/[0-9]/, { message: "Password must include a number" })
+      .regex(/[!@#$%^&*(),.?":{}|<>]/, {
+        message: "Password must include a special character",
+      }),
+    confirmPassword: z.string().min(1, { message: "Please confirm your password" }),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords must match",
+    path: ["confirmPassword"],
+  });
+
+function ResetPasswordForm() {
   const searchParams = useSearchParams();
-  const token = searchParams.get("token"); // Retrieve token from query params
+  const token = searchParams.get("token");
+  const router = useRouter();
+  const form = useForm({
+    resolver: zodResolver(FormSchema),
+    defaultValues: {
+      password: "",
+      confirmPassword: "",
+    },
+  });
+  const [loading, setLoading] = useState(false);
 
-  const handleResetPassword = async (e) => {
-    e.preventDefault();
-
-    if (password !== confirmPassword) {
-      toast({
-        title: "Error",
-        description: "Passwords do not match.",
-        variant: "destructive",
-      });
-      return;
-    }
-
+  const handleSubmit = async (data) => {
     setLoading(true);
     try {
       const response = await fetch("/api/password_reset", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token, password }),
+        body: JSON.stringify({ token, password: data.password }),
       });
 
       if (response.ok) {
         toast({
           title: "Success",
-          description: "Your password has been reset. Please log in.",
+          description: "Your password has been reset.",
         });
         router.push("/login");
       } else {
-        const result = await response.json();
+        const errorData = await response.json();
         toast({
           title: "Error",
-          description: result.message || "Failed to reset password.",
+          description: errorData.message || "Failed to reset password.",
           variant: "destructive",
         });
       }
     } catch (error) {
       toast({
         title: "Error",
-        description: "Network error. Please try again later.",
+        description: error.message || "Network error. Please try again later.",
         variant: "destructive",
       });
     } finally {
@@ -61,28 +78,47 @@ export default function ResetPasswordForm() {
 
   return (
     <div className="flex justify-center items-center min-h-screen bg-gray-50 p-4">
-      <div className="w-full max-w-md bg-white shadow-md rounded-lg p-6">
-        <h1 className="text-2xl font-semibold mb-4 text-center">Reset Password</h1>
-        <form onSubmit={handleResetPassword} className="space-y-4">
-          <Input
-            type="password"
-            placeholder="Enter new password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6 w-full max-w-md">
+          <FormField
+            control={form.control}
+            name="password"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>New Password</FormLabel>
+                <FormControl>
+                  <Input {...field} type="password" autoComplete="new-password" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
           />
-          <Input
-            type="password"
-            placeholder="Confirm new password"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            required
+          <FormField
+            control={form.control}
+            name="confirmPassword"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Confirm New Password</FormLabel>
+                <FormControl>
+                  <Input {...field} type="password" autoComplete="new-password" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
           />
           <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? "Processing..." : "Reset Password"}
+            {loading ? "Resetting..." : "Reset Password"}
           </Button>
         </form>
-      </div>
+      </Form>
     </div>
+  );
+}
+
+export default function ResetPasswordPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <ResetPasswordForm />
+    </Suspense>
   );
 }
